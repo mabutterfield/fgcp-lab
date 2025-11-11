@@ -1,38 +1,23 @@
-# group_vars/bookends.yml
-base_cidr: "10.20.0.0/22"
-alloc_prefix: 28
-
-subnet_map:
-  mgmt_pool_idx: 1
-  transit_pool_idx: 2
-  lan_pool_idx: 3
-  loop_pool_idx: 4
-
-host_offsets:
-  mgmt: { start: 1 }
-  transit:{ start: 5 }
-  lan: { start: 2 }
-  loop: { start: 10 }
-
 vdoms:
-  - { name: root, role: mgmt }
-  - { name: data }
+  - name: root
+    mgmt: true
+  - name: traffic
 
-aggregates:
-  - {
-      name: "agg-wan",
-      members: ["port1", "port2"],
-      lacp: "active",
-      vdom: "data",
-      role: "wan",
-    }
-  - {
-      name: "agg-lan",
-      members: ["port3", "port4"],
-      lacp: "active",
-      vdom: "data",
-      role: "lan",
-    }
+
+
+networks:
+  dc_lan: "10.10.10.0/24"
+  prem_lan: "10.10.20.0/24"
+  sync1: "10.10.30.0/24"
+  sync2: "10.10.40.0/24"
+
+
+
+aggregate:
+  - name: "agg"
+    members: ["port2", "port3"]
+    lacp: "active"
+    vdom: root
 
 zones:
   - { name: "TRANSIT", interfaces: ["agg-wan"], vdom: "data" }

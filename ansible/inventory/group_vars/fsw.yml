@@ -1,0 +1,7 @@
+# group_vars/fsw.yml
+# mgmt_interface: port1
+mgmt_subnet: 255.255.255.0
+mgmt_gateway: 192.168.5.1
+ansible_user: admin
+admin_password_file: ../fsw_admin_password.txt
+

@@ -3,3 +3,4 @@ collections:
   - name: fortinet.fortios
   - name: ansible.utils
   - name: community.general
+  - name: fortinet.fortiswitch

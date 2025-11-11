@@ -8,17 +8,17 @@
       {{
         (groups['fgsp'] | difference([inventory_hostname])) | sort
       }}
+    fgsp_peer_count: "{{ groups['fgsp'] | length }}"
 
-- name: shape syncvd list
+- name: Build list of FGSP sync interfaces
+  ansible.builtin.set_fact:
+    fgsp_sync_int: "{{ interfaces | selectattr('ha_sync','defined') | selectattr('ha_sync','equalto',true)| map(attribute='name') | list }}"
+
+- name: Build Syncvd List
   ansible.builtin.set_fact:
     fgsp_syncvd_list: "{{ vdoms | rejectattr('name', 'equalto', 'root') | map(attribute='name') | map('community.general.dict_kv', 'name') | list }}"
 
-# - name: Debug Peers
-#   ansible.builtin.debug:
-#     var: fgsp_syncvd_list
-
-# - meta: end_host
-
+#### Add +1 to loop index so we start at 1 instead of 0.
 - name: Build cluster_peer
   ansible.builtin.set_fact:
     cluster_peer: "{{ (cluster_peer | default([])) + [ {
@@ -35,10 +35,25 @@
 # - name: Debug Peers
 #   ansible.builtin.debug:
 #     var: cluster_peer
+### Add peer count so we start in the next sequential order
+- name: Append  cluster_peer
+  ansible.builtin.set_fact:
+    cluster_peer: "{{ (cluster_peer | default([])) + [ {
+      'peerip':  (networks['sync2'] | ansible.utils.ipmath( hostvars[item].fgsp_index)),
+      'peervd':  'root',
+      'sync_id': loop_index+fgsp_peer_count,
+      'syncvd':   fgsp_syncvd_list
+      } ] }}"
+  loop: "{{ fgsp_peers }}"
+  loop_control:
+    label: "{{ item }}"
+    index_var: loop_index
 
-# - meta: end_host
+# - name: Debug Peers
+#   ansible.builtin.debug:
+#     var: cluster_peer
 
-- name: Configure FortiGate Session Life Support Protocol (FGSP) cluster attributes.
+- name: Configure FortiGate Session Life Support Protocol (FGSP) cluster attributes
   fortinet.fortios.fortios_system_standalone_cluster:
     vdom: "{{ vdom }}"
     system_standalone_cluster:
@@ -49,33 +64,14 @@
       # monitor_interface:
       #     -  name: "default_name_32 (source system.interface.name)"
       psksecret: "{{ fgsp.psksecret }}"
-      # session_sync_dev: "{{ }}"
+      session_sync_dev: "{{ fgsp_sync_int }}"
       standalone_group_id: "{{ fgsp.standalone_group_id }}"
       # utm_traffic_bounce: "enable"  <- 7.6.4 and later option
-# - name: Configure FortiGate Session Life Support Protocol (FGSP) cluster attributes.
-#   fortinet.fortios.fortios_system_standalone_cluster:
-#     vdom: "{{ vdom }}"
-#     system_standalone_cluster:
-#       cluster_peer:
-#         # - down_intfs_before_sess_sync:
-#         #     - name: "default_name_6 (source system.interface.name)"
-#           # hb_interval: "2"
-#           # hb_lost_threshold: "10"
-#           # ipsec_tunnel_sync: "enable"
-#           peerip: "<your_own_value>"
-#           peervd: "<your_own_value> (source system.vdom.name)"
-#           # secondary_add_ipsec_routes: "enable"
-#           # session_sync_filter
-#           sync_id: "<you_own_value>"
-#           syncvd:
-#             - name: "default_name_26 (source system.vdom.name)"
-#       encryption: "enable"
-#       group_member_id: "{{ fgsp_index }}"
-#       # helper_traffic_bounce: "enable"
-#       layer2_connection: "available"
-#       # monitor_interface:
-#       #     -  name: "default_name_32 (source system.interface.name)"
-#       psksecret: "{{ fgsp.psksecret }}"
-#       session_sync_dev: "{{ }}"
-#       standalone_group_id: "{{ standalone_group_id }}"
-#       utm_traffic_bounce: "enable"
+
+- name: Configure HA settings
+  fortinet.fortios.fortios_system_ha:
+    vdom: "{{ vdom }}"
+    system_ha:
+      session_pickup: "{{ fgsp.session_pickup | default('enable')  }}"
+      session_pickup_connectionless: "{{ fgsp.session_pickup_connectionless | default('enable')  }}"
+      session_pickup_expectation: "{{ fgsp.session_pickup_expectation | default('enable') }}"

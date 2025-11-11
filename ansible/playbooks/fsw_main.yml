@@ -1,0 +1,146 @@
+---
+- name: FortiSwitch System Configuration
+  hosts: fsw
+  connection: httpapi
+  gather_facts: false
+  pre_tasks:
+    - name: Establish Paths
+      ansible.builtin.include_tasks: "includes/pre_tasks.yml"
+  tasks:
+###
+### 1. Configure Management (likely done manually)
+### 2. Disable Auto-ISL on Interfaces to prevent auto-link
+    # config switch auto-network
+    # set status disable
+    # end
+    # config switch global
+    # set auto-fortilink-discovery disable
+    # end
+### 3. Config Interfaces (loopback and L3 interface)
+    # config system interface
+    #   edit "loopback"
+    #   set type loopback
+    #   set ip 10.255.0.201/32
+    #   set allowaccess ping ssh
+    # next
+    # edit "RVI11"
+    #   set type physical
+    #   set l2-interface "port3"
+    # next
+### 4. Config BGP eVPN
+    # config router bgp
+    # set as 65001
+    # set router-id 10.255.0.201
+    #   config neighbor-group
+    #     edit "ISL"
+    #     set advertisement-interval 0
+    #     set activate-evpn enable
+    #     set bfd enable
+    #     set capability-extended-nexthop enable
+    #     set soft-reconfiguration enable
+    #     set interface "RVI11" "RVI12" "RVI13" "RVI14"
+    #     set remote-as "internal"
+    #     set keep-alive-timer 3
+    #     set holdtime-timer 9
+    #     set route-reflector-client enable
+    #     set route-reflector-client-evpn enable
+    #     set password "fortinet"
+    #   end
+    #   config redistribute "connected"
+    #     set status enable
+    #   end
+    # end
+### 5. Config Leaf switches. (Same interface + VLAN), similar BGP, add evpn
+    # config system interface
+    #   edit "SVI100"
+    #     set vlanid 100
+    #     set interface "internal"
+    #   next
+    #   edit "SVI200"
+    #     set vlanid 200
+    #     set interface "internal"
+    #   next
+    # end
+
+    # config router bgp
+    #   set as 65001
+    #   set router-id 10.255.0.1
+    #   set maximum-paths-ibgp 2
+    #   config neighbor-group
+    #     edit "ISL"
+    #     set advertisement-interval 0
+    #     set activate-evpn enable
+    #     set bfd enable
+    #     set capability-extended-nexthop enable
+    #     set soft-reconfiguration enable
+    #     set interface "RVI11" "RVI21"
+    #     set remote-as "internal"
+    #     set keep-alive-timer 3
+    #     set holdtime-timer 9
+    #     set password "fortinet“
+    #   end
+    #   config redistribute "connected"
+    #     set status enable
+    #   end
+    #   config evpn
+    #   set advertise-vni enable
+    #   config vni
+    #     edit 100
+    #       set rd <route distinguisher> <- optional
+    #       set export-rt <route target to export> <- optional
+    #       set import-rt <route target to import> <- optional
+    #     next
+    #     edit 200
+    #     next
+    #   end
+### 6. Config leaf VXLAN
+    # config system vxlan
+    #   edit "vni.100"
+    #     set vni 100
+    #     set vlanid 100
+    #     set interface "loopback"
+    #     set evpn enable
+    #     set arp-nd-suppression enable
+    #   next
+    #   edit "vni.200"
+    #     set vni 200
+    #     set vlanid 200
+    #     set interface "loopback"
+    #     set evpn enable
+    #     set arp-nd-suppression enable
+    #   next
+    # end
+### 7. config switch access ports
+    # config switch interface
+    #   edit "port1"
+    #     set native-vlan 100
+    #   next
+    #   edit "port2"
+    #     set native-vlan 200
+    #   next
+    # end
+### 8. Misc
+  # config switch stp settings
+  #   set status disable
+  # end
+  # config switch global
+  #   set vxlan-stp-virtual-root enable
+  # end
+
+
+  - name: Debug Vars
+    ansible.builtin.debug:
+      var:  ansible_host 
+
+  - name: Configure Global settings
+    fortinet.fortiswitch.fortiswitch_system_global:
+      system_global:
+        admintimeout: 20
+
+  - name: Configure interfaces.
+    fortinet.fortiswitch.fortiswitch_system_interface:
+      state: "present"
+      system_interface:
+         name: mgmt
+        #  interface: mgmt
+         secondary_IP: disable

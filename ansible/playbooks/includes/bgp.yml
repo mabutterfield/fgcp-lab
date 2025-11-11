@@ -1,0 +1,83 @@
+- name: Select Traffic Interfaces
+  ansible.builtin.set_fact:
+    traffic_int: "{{ interfaces | selectattr('vdom','defined') | selectattr('vdom','ne','root')| map(attribute='name') | list }}"
+
+# - name: Debug BGP peers
+#   ansible.builtin.debug:
+#     var: interfaces | rejectattr('vdom','equalto','root') | list
+
+- name: Select Peers for Traffic (last 2 IPs of subnet)
+  ansible.builtin.set_fact:
+    bgp_peer: "{{ bgp_peer | default([]) + [{
+      'vdom': item.vdom,
+      'interface': item.name,
+      'ip': (networks[item.network] | ansible.utils.ipmath(fgsp_index) ),
+      'bgp_peer': (networks[item.network] | ansible.utils.ipmath(-2) ),
+      'bgp_as': (bgp.remote_as[item.network] | default(''))
+      }]
+      }}"
+  loop: "{{ interfaces }}"
+  when: item.vdom is defined and item.vdom != 'root'
+
+
+
+# - name: Select Peers for Traffic (last 2 IPs of subnet)
+#   ansible.builtin.set_fact:
+#     bgp_peer_format: |-
+#       {%- set p = {} -%}
+#       {%- for int in (interfaces|default([]))  -%}
+#           {% set peer = (networks[item.network] | ansible.utils.ipmath(-2) ) | default('')  %}
+#               {%- if peer not in p -%}
+#                 {% set _ = p.update({ peer:[] }) -%}
+#               {%- endif -%}
+#                  {%- set _ = p[peer].append( bgp.remote_as[item.network] ) -%}
+#       {%- endfor -%}
+#       {{ p  }}
+#   loop: "{{ interfaces }}"
+#   when: item.vdom is defined and item.vdom != 'root'
+
+- name: Debug BGP peers
+  ansible.builtin.debug:
+    var: bgp_peer
+
+# - meta:
+#     end_host
+
+- name: Configure BGP
+  fortinet.fortios.fortios_router_bgp:
+    vdom: "{{ item.name }}"
+    router_bgp:
+      as: "{{ bgp.local_as }}"
+      router_id: "{{ networks['loopback'] | ansible.utils.ipmath( fgsp_index ) }}"
+      ebgp_multipath: "{{ bgp.ebgp_multipath | default('enable') }}"
+      neighbor:
+        - ip: 10.10.10.254
+          soft_reconfiguration: "{{ bgp.soft_reconfiguration | default('enable') }}"
+          remote_as: "{{ bgp.remote_as.dc_lan }}"
+          next_hop_self: "{{ bgp.next_hop_self | default('enable') }}"
+          bfd: "{{ bgp.bfd | default('enable') }}"
+        - ip: 10.10.20.254
+          soft_reconfiguration: "{{ bgp.soft_reconfiguration | default('enable') }}"
+          remote_as: "{{ bgp.remote_as.prem_lan }}"
+          next_hop_self: "{{ bgp.next_hop_self | default('enable') }}"
+          bfd: "{{ bgp.bfd | default('enable') }}"
+
+  loop: "{{ vdoms }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.name is defined
+    - item.name != 'root'
+      # edit "10.16.105.33"
+      #     set bfd enable
+      #     set next-hop-self enable
+      #     set shutdown enable
+      #     set soft-reconfiguration enable
+      #     set description "ONPREM DC21"
+      #     set remote-as 64802
+      #     set route-map-out "ONPREM_FILTER"
+# {peer}
+# bfd: enable
+# soft-reconfiguration: enable
+# remote-as: {{ as }}
+# next-hop-self: enable

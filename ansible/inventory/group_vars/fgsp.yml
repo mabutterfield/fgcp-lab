@@ -11,6 +11,7 @@ networks:
   prem_lan: "10.10.20.0/24"
   sync1: "10.10.30.0/24"
   sync2: "10.10.40.0/24"
+  loopback: "10.10.255.0/24"
 
 aggregate:
   - name: "agg"
@@ -26,6 +27,12 @@ interfaces:
     vlanid: 100
     network: dc_lan
     allowaccess: [ping]
+  - name: lo1
+    vdom: traffic
+    type: loopback
+    network: loopback
+    allowaccess: [ping]
+
   - name: vl_prem
     vdom: traffic
     type: vlan
@@ -35,11 +42,13 @@ interfaces:
     allowaccess: [ping]
   - name: port4
     vdom: root
+    ha_sync: true
     alias: sync1
     network: sync1
     allowaccess: [ping]
   - name: port5
     vdom: root
+    ha_sync: true
     alias: sync2
     network: sync2
     allowaccess: [ping]
@@ -53,11 +62,18 @@ fgsp:
   session_pickup: "enable"
   psksecret: "fortinet123"
   standalone_group_id: 0
+  session_pickup_connectionless: "enable"
+  session_pickup_expectation: "enable"
   # peers are resolved from group hosts dynamically; you can pin HB interface if desired
   # hb_interface: "sync1" # example; or a dedicated VLAN subint if you prefer
 
 # BGP (peers will be the bookends + optional intra-FGSP adjacencies as needed)
 bgp:
-  vdom: "data"
+  vdom: "traffic"
   local_as: 65010
-  advertise_lan: true
+  ebgp_multipath: enable
+  soft_reconfiguration: enable
+  bfd: enable
+  remote_as:
+    dc_lan: 65001
+    prem_lan: 65002
