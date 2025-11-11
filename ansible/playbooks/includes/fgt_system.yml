@@ -1,0 +1,101 @@
+- name: Configure global attributes.
+  fortinet.fortios.fortios_system_global:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    system_global:
+      hostname: "{{ inventory_hostname }}"
+      admintimeout: "{{ global_settings.admintimeout | default(60) }}"
+      gui_theme: "{{ global_settings.gui_theme | default(omit) }}"
+      admin_telnet: "{{ global_settings.admin_telnet | default('disable') }}"
+      admin_telnet_port: "{{ global_settings.admin_telnet_port | default(omit) }}"
+      snat_route_change: "{{ global_settings.snat_route_change | default(omit) }}"
+      ssl_min_proto_version: "{{ global_settings.ssl_min_proto_version | default('TLSv1-2') }}"
+      timezone: "{{ global_settings.timezone | default(omit) }}"
+
+- name: Configure System DNS.
+  fortinet.fortios.fortios_system_dns:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    system_dns:
+      primary: "{{ system_dns.primary | default(omit) }}"
+      secondary: "{{ system_dns.secondary | default(omit) }}"
+      protocol: "{{ system_dns.protocol | default(omit) }}"
+      interface_select_method: "{{ system_dns.interface_select_method | default('auto') }}"
+      interface: "{{ system_dns.interface | default(omit) }}"
+      timeout: "{{ system_dns.timeout | default(omit) }}"
+
+- name: Read SNMP Config
+  fortinet.fortios.fortios_configuration_fact:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    selector: "system.snmp_community"
+    params:
+  register: _snmp_community
+  failed_when: _snmp_community.failed | default(false) | bool
+
+- name: LIST of snmp communities
+  ansible.builtin.set_fact:
+    _snmp_community_installed: "{{ _snmp_community.meta.results |  map(attribute='id') | list | default([])  }}"
+    _snmp_community_required: "{{ system_snmp_community | map(attribute='id') | list | default([]) }}"
+  when: not ( _snmp_community.failed | default(false) | bool )
+
+- name: Create list of snmp communities to delete
+  ansible.builtin.set_fact:
+    _snmp_community_to_remove: "{{ _snmp_community_installed | difference(_snmp_community_required) | list }}"
+  when: not ( _snmp_community.failed | default(false) | bool )
+
+- name: Remove unwanted SNMP communities
+  fortinet.fortios.fortios_system_snmp_community:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "absent"
+    system_snmp_community:
+      id: "{{ item | int }}"
+  loop: "{{ _snmp_community_to_remove }}"
+  loop_control:
+    label: "{{ item }}"
+  when: _snmp_community_to_remove is defined and (_snmp_community_to_remove | length > 0)
+
+- name: SNMP community configuration
+  fortinet.fortios.fortios_system_snmp_community:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "{{ item.state | default('disable') }}"
+    system_snmp_community:
+      events: "{{ item.events | default(omit) }}"
+      id: "{{ item.id }}"
+      name: "{{ item.name | default(omit) }}"
+      status: "{{ item.status | default('enable') }}"
+      hosts: "{{ item.hosts | default(omit) }}"
+      # mib_view: "<your_own_value> (source system.snmp.mib-view.name)"
+      query_v1_port: "{{ item.query_v1_port | default(omit) }}"
+      query_v1_status: "{{ item.query_v1_status | default('disable') }}"
+      query_v2c_port: "{{ item.query_v2c_port | default(161) }}"
+      query_v2c_status: "{{ item.query_v1_status | default('enable') }}"
+      trap_v1_lport: "{{ item.trap_v1_lport | default(omit) }}"
+      trap_v1_rport: "{{ item.trap_v1_rport | default(omit) }}"
+      trap_v1_status: "{{ item.trap_v1_status | default('disable') }}"
+      trap_v2c_lport: "{{ item.trap_v2c_lport | default(omit) }}"
+      trap_v2c_rport: "{{ item.trap_v2c_rport | default(omit) }}"
+      trap_v2c_status: "{{ item.trap_v2c_status | default('disable') }}"
+      # vdoms:
+      #   - name: "default_name_37 (source system.vdom.name)"
+  loop: "{{ system_snmp_community }}"
+  loop_control: { label: "{{ item.name }}" }
+
+- name: SNMP system info configuration
+  fortinet.fortios.fortios_system_snmp_sysinfo:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    system_snmp_sysinfo:
+      append_index: "{{ system_snmp_sysinfo.append_index | default('enable') }}"
+      contact_info: "{{ system_snmp_sysinfo.contact_info | default(omit) }}"
+      description: "{{ system_snmp_sysinfo.description | default(omit) }}"
+      location: "{{ system_snmp_sysinfo.location | default(omit) }}"
+      # non_mgmt_vdom_query: "enable"
+      status: "{{ system_snmp_sysinfo.status | default('disable') }}"
+      trap_free_memory_threshold: "{{ system_snmp_sysinfo.trap_free_memory_threshold | default(5) }}"
+      trap_freeable_memory_threshold: "{{ system_snmp_sysinfo.trap_freeable_memory_threshold | default(60) }}"
+      trap_high_cpu_threshold: "{{ system_snmp_sysinfo.trap_high_cpu_threshold | default(80) }}"
+      trap_log_full_threshold: "{{ system_snmp_sysinfo.trap_log_full_threshold | default(90) }}"
+      trap_low_memory_threshold: "{{ system_snmp_sysinfo.trap_low_memory_threshold | default(80) }}"

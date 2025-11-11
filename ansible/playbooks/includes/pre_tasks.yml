@@ -1,0 +1,11 @@
+- name: Establish Paths
+  ansible.builtin.set_fact:
+    data_root: "{{ inventory_dir | realpath }}"
+    repo_root: "{{ ansible_config_file | dirname }}/../"
+  delegate_to: local
+
+- name: Load API Password from File
+  ansible.builtin.set_fact:
+    working_dir: "{{ repo_root}}/working"
+    ansible_password: "{{ lookup('file', ansible_config_file ~'/../' ~ admin_password_file) | trim }}"
+  delegate_to: local

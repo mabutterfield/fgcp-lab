@@ -1,0 +1,22 @@
+---
+- name: FortiGate System Configuration
+  hosts: fgsp
+  connection: httpapi
+  gather_facts: false
+  pre_tasks:
+    - name: Establish Paths
+      ansible.builtin.include_tasks: "includes/pre_tasks.yml"
+  tasks:
+    - name: System Configuration
+      ansible.builtin.include_tasks: "includes/fgt_system.yml"
+
+    - name: Enable VDOM
+      ansible.builtin.include_tasks: "includes/vdom.yml"
+
+    - name: Configure Interfaces
+      ansible.builtin.include_tasks: "includes/interface.yml"
+
+    - name: Configure FGSP
+      ansible.builtin.include_tasks: "includes/fgsp.yml"
+      when: "'fgsp' in group_names"
+

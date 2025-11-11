@@ -1,0 +1,44 @@
+# group_vars/bookends.yml
+base_cidr: "10.20.0.0/22"
+alloc_prefix: 28
+
+subnet_map:
+  mgmt_pool_idx: 1
+  transit_pool_idx: 2
+  lan_pool_idx: 3
+  loop_pool_idx: 4
+
+host_offsets:
+  mgmt: { start: 1 }
+  transit:{ start: 5 }
+  lan: { start: 2 }
+  loop: { start: 10 }
+
+vdoms:
+  - { name: root, role: mgmt }
+  - { name: data }
+
+aggregates:
+  - {
+      name: "agg-wan",
+      members: ["port1", "port2"],
+      lacp: "active",
+      vdom: "data",
+      role: "wan",
+    }
+  - {
+      name: "agg-lan",
+      members: ["port3", "port4"],
+      lacp: "active",
+      vdom: "data",
+      role: "lan",
+    }
+
+zones:
+  - { name: "TRANSIT", interfaces: ["agg-wan"], vdom: "data" }
+  - { name: "LAN", interfaces: ["agg-lan"], vdom: "data" }
+
+bgp:
+  vdom: "data"
+  local_as: 65020
+  # Peers computed from FGSP transit /28 addresses (see tasks/bgp.yml)

@@ -1,0 +1,41 @@
+# group_vars/allfgts.yml
+mgmt_interface: port1
+mgmt_subnet: 255.255.255.0
+mgmt_gateway: 10.255.113.254
+ansible_user: admin
+admin_password_file: ../admin_password.txt
+vdom: root
+
+#### Default Settings
+global_settings:
+  admintimeout: 90
+  gui_theme: eclipse
+  admin_telnet: disable
+  timezone: "US/Eastern"
+
+system_dns:
+  domain: demolab.com
+  protocol: cleartext
+  primary: 8.8.8.8
+  secondary: 1.1.1.1
+
+system_snmp_sysinfo:
+  contact_info: "Mike"
+  description: "desc"
+  location: "Lab"
+  status: enable
+
+system_snmp_community:
+  - name: testsnmp
+    id: 1
+    state: present
+    status: enable
+    hosts:
+      - id: 1
+        ip: 10.255.0.0/16
+
+system_ntp:
+  ntpsync: enable
+  server_mode: enable
+  type: fortiguard
+### vdoms

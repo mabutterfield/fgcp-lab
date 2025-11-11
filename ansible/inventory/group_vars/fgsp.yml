@@ -1,0 +1,63 @@
+# group_vars/fgsp.yml
+
+# Aggregates/zones **identical for all FGSP members**
+vdoms:
+  - name: root
+    mgmt: true
+  - name: traffic
+
+networks:
+  dc_lan: "10.10.10.0/24"
+  prem_lan: "10.10.20.0/24"
+  sync1: "10.10.30.0/24"
+  sync2: "10.10.40.0/24"
+
+aggregate:
+  - name: "agg"
+    members: ["port2", "port3"]
+    lacp: "active"
+    vdom: root
+
+interfaces:
+  - name: vl_dc
+    vdom: traffic
+    type: vlan
+    interface: agg
+    vlanid: 100
+    network: dc_lan
+    allowaccess: [ping]
+  - name: vl_prem
+    vdom: traffic
+    type: vlan
+    network: prem_lan
+    interface: agg
+    vlanid: 200
+    allowaccess: [ping]
+  - name: port4
+    vdom: root
+    alias: sync1
+    network: sync1
+    allowaccess: [ping]
+  - name: port5
+    vdom: root
+    alias: sync2
+    network: sync2
+    allowaccess: [ping]
+
+zones:
+  - { name: "TRANSIT", interfaces: ["agg-wan"], vdom: "data" }
+  - { name: "LAN", interfaces: ["agg-lan"], vdom: "data" }
+
+# FGSP specific (session sync / standalone cluster)
+fgsp:
+  session_pickup: "enable"
+  psksecret: "fortinet123"
+  standalone_group_id: 0
+  # peers are resolved from group hosts dynamically; you can pin HB interface if desired
+  # hb_interface: "sync1" # example; or a dedicated VLAN subint if you prefer
+
+# BGP (peers will be the bookends + optional intra-FGSP adjacencies as needed)
+bgp:
+  vdom: "data"
+  local_as: 65010
+  advertise_lan: true

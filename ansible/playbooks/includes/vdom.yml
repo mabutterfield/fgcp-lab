@@ -1,0 +1,20 @@
+- name: Enable VDOMS
+  # notify: reset_connection
+  fortinet.fortios.fortios_system_global:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    system_global:
+      vdom_mode: "multi-vdom"
+
+- name: Reset Connection
+  ansible.builtin.meta: reset_connection
+
+- name: Configure virtual domain.
+  fortinet.fortios.fortios_system_vdom:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "present"
+    system_vdom:
+      name: "{{ item.name }}"
+  loop: "{{ vdoms }}"
+  loop_control: { label: "{{ item.name }}" }

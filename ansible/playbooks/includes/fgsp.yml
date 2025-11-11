@@ -1,0 +1,81 @@
+- name: Dump FGSP Settings
+  ansible.builtin.debug:
+    msg: "Executing FGSP test"
+
+- name: Build list of FGSP peer hostnames (exclude self)
+  ansible.builtin.set_fact:
+    fgsp_peers: >-
+      {{
+        (groups['fgsp'] | difference([inventory_hostname])) | sort
+      }}
+
+- name: shape syncvd list
+  ansible.builtin.set_fact:
+    fgsp_syncvd_list: "{{ vdoms | rejectattr('name', 'equalto', 'root') | map(attribute='name') | map('community.general.dict_kv', 'name') | list }}"
+
+# - name: Debug Peers
+#   ansible.builtin.debug:
+#     var: fgsp_syncvd_list
+
+# - meta: end_host
+
+- name: Build cluster_peer
+  ansible.builtin.set_fact:
+    cluster_peer: "{{ (cluster_peer | default([])) + [ {
+      'peerip':  (networks['sync1'] | ansible.utils.ipmath( hostvars[item].fgsp_index)),
+      'peervd':  'root',
+      'sync_id': loop_index+1,
+      'syncvd':   fgsp_syncvd_list
+      } ] }}"
+  loop: "{{ fgsp_peers  }}"
+  loop_control:
+    label: "{{ item }}"
+    index_var: loop_index
+
+# - name: Debug Peers
+#   ansible.builtin.debug:
+#     var: cluster_peer
+
+# - meta: end_host
+
+- name: Configure FortiGate Session Life Support Protocol (FGSP) cluster attributes.
+  fortinet.fortios.fortios_system_standalone_cluster:
+    vdom: "{{ vdom }}"
+    system_standalone_cluster:
+      cluster_peer: "{{cluster_peer}}"
+      encryption: "enable"
+      group_member_id: "{{ fgsp_index }}"
+      layer2_connection: "available"
+      # monitor_interface:
+      #     -  name: "default_name_32 (source system.interface.name)"
+      psksecret: "{{ fgsp.psksecret }}"
+      # session_sync_dev: "{{ }}"
+      standalone_group_id: "{{ fgsp.standalone_group_id }}"
+      # utm_traffic_bounce: "enable"  <- 7.6.4 and later option
+# - name: Configure FortiGate Session Life Support Protocol (FGSP) cluster attributes.
+#   fortinet.fortios.fortios_system_standalone_cluster:
+#     vdom: "{{ vdom }}"
+#     system_standalone_cluster:
+#       cluster_peer:
+#         # - down_intfs_before_sess_sync:
+#         #     - name: "default_name_6 (source system.interface.name)"
+#           # hb_interval: "2"
+#           # hb_lost_threshold: "10"
+#           # ipsec_tunnel_sync: "enable"
+#           peerip: "<your_own_value>"
+#           peervd: "<your_own_value> (source system.vdom.name)"
+#           # secondary_add_ipsec_routes: "enable"
+#           # session_sync_filter
+#           sync_id: "<you_own_value>"
+#           syncvd:
+#             - name: "default_name_26 (source system.vdom.name)"
+#       encryption: "enable"
+#       group_member_id: "{{ fgsp_index }}"
+#       # helper_traffic_bounce: "enable"
+#       layer2_connection: "available"
+#       # monitor_interface:
+#       #     -  name: "default_name_32 (source system.interface.name)"
+#       psksecret: "{{ fgsp.psksecret }}"
+#       session_sync_dev: "{{ }}"
+#       standalone_group_id: "{{ standalone_group_id }}"
+#       utm_traffic_bounce: "enable"

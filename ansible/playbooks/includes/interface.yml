@@ -1,0 +1,57 @@
+- name: Configure Aggregate Interfaces
+  fortinet.fortios.fortios_system_interface:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    system_interface:
+      name: "{{ item.name }}"
+      vdom: "{{ item.vdom }}"
+      type: "aggregate"
+      lacp_mode: "{{ item.lacp | default('active') }}"
+      member: "{{ item.members | map('community.general.dict_kv', 'interface_name') | list }}"
+      role: "{{ item.role | default(omit) }}"
+      alias: "{{ item.alias | default(omit) }}"
+  loop: "{{  aggregate }}"
+  loop_control: { label: "{{ item.name }}" }
+
+- name: Ensure interface's network key exists
+  ansible.builtin.assert:
+    that:
+      - item.network in networks
+    fail_msg: "Unknown network '{{ item.network }}' for interface '{{ item.name }}'. Valid: {{ networks.keys() | list }}"
+    quiet: true
+  loop: "{{ interfaces }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure Remaining Interfaces
+  fortinet.fortios.fortios_system_interface:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    system_interface:
+      name: "{{ item.name }}"
+      vdom: "{{ item.vdom }}"
+      type: "{{ item.type | default((omit)) }}"
+      vlanid: "{{ item.vlanid | default(omit) }}"
+      alias: "{{ item.alias | default(omit) }}"
+      role: "{{ item.role | default('undefined') }}"
+      ip: "{{ networks[item.network] | ansible.utils.ipmath( fgsp_index ) ~ '/24'}}"
+      # mode: "{{ item.mode | default(omit) }}"
+      interface: "{{ item.interface | default(omit) }}"
+      allowaccess: "{{ item.allowaccess | default(omit) }}"
+      # auto_auth_extension_device: "{{ item.auto_auth_extension_device | default(omit) }}"
+  loop: "{{  interfaces }}"
+  loop_control:
+    {
+      label: "{{ item.name }}:{{item.vdom | default('root') }}:{{ item.network | default(omit)}}",
+    }
+# - name: Calculate IP networks
+#   ansible.builtin.debug:
+#     msg:
+#       port_name: "{{ item.name}}"
+#       network_name: "{{ item.network }}"
+#       network_prefix: "{{ networks[item.network] | ansible.utils.ipmath( fgsp_index ) ~ '/24'}}"
+#   loop: "{{ interfaces }}"
+#   loop_control:
+#     label: "{{ item.name }}:{{ vdom }}:{{ item.network }}"
