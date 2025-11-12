@@ -5,3 +5,23 @@ mgmt_gateway: 192.168.5.1
 ansible_user: admin
 admin_password_file: ../fsw_admin_password.txt
 
+bgp:
+  as: 65001
+  redistribute:
+    - name: "connected"
+      status: "enable"
+  neighbor_group:
+    - name: ISL
+      advertisement_interval: 0
+      activate_evpn: enable
+      bfd: enable
+      capability_extended_nexthop: enable
+      soft_reconfiguration: enable
+      remote_as: "internal"
+      keep_alive_timer: 3
+      holdtime_timer: 9
+      password: "fortinet"
+  spine_config:
+    ### Spine Configs:
+    route_reflector_client: enable
+    route_reflector_client_evpn: enable

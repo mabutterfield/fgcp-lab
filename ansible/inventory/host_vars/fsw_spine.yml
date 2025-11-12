@@ -1,0 +1,21 @@
+switch_system_interface:
+  - name: mgmt
+    type: physical
+    secondary_ip: disable
+  - name: loop1
+    type: loopback
+    ip: 192.168.6.1/32
+    allowaccess: [ping, ssh]
+  - name: RVI11
+    type: physical
+    description: "to leaf1-port1"
+    l2_interface: "port3"
+  - name: RVI12
+    type: physical
+    description: "to leaf2-port1"
+    l2_interface: "port4"
+  - name: RVI13
+    type: physical
+    description: "to leaf3-port1"
+    l2_interface: "port5"
+# bgp_role: spine

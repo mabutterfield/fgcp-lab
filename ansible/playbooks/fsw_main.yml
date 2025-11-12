@@ -16,6 +16,19 @@
     # config switch global
     # set auto-fortilink-discovery disable
     # end
+
+  - name: Disable Auto-Network
+    fortinet.fortiswitch.fortiswitch_switch_auto_network:
+      switch_auto_network:
+          status: "{{ switch_auto_network | default('disable') }}"
+
+
+  - name: Disalbe auto-fortilink-discovery
+    fortinet.fortiswitch.fortiswitch_switch_global:
+      switch_global:
+        auto_fortilink_discovery: "{{ auto_fortilink_discovery | default('disable')  }}"
+
+
 ### 3. Config Interfaces (loopback and L3 interface)
     # config system interface
     #   edit "loopback"
@@ -27,6 +40,24 @@
     #   set type physical
     #   set l2-interface "port3"
     # next
+
+  - name: Configure interfaces.
+    fortinet.fortiswitch.fortiswitch_system_interface:
+      state: "present"
+      system_interface:
+        name: "{{ item.name  }}"
+        interface: "{{ item.interface | default(omit) }}"
+        ip: "{{ item.ip | default(omit) }}"
+        type: "{{ item.type | default(omit) }}"
+        allowaccess: "{{ item.allowaccess | default(omit) }}"
+        secondary_IP: "{{ item.secondary_ip | default(omit) }}"
+        vlanid: "{{ item.vlanid | default(omit) }}"
+        description: "{{ item.description | default(omit) }}"
+        l2_interface: "{{ item.l2_interface | default(omit)  }}"
+    loop: "{{ switch_system_interface }}"
+    loop_control: 
+      label: "{{ item.name }}"
+
 ### 4. Config BGP eVPN
     # config router bgp
     # set as 65001
@@ -50,6 +81,63 @@
     #     set status enable
     #   end
     # end
+  # - name: Debug
+  #   debug: 
+  #     msg: 
+  #       router_id: "{{ switch_system_interface | selectattr('type','equalto','loopback')| map(attribute='ip') | first | split('/') | first }}" 
+  #       rvi: "{{ switch_system_interface | selectattr('l2_interface', 'defined') | map(attribute='name') | list }}"
+  - name: Calculate BGP Config
+    ansible.builtin.set_fact:
+       _bgp_ng_interface: >-
+        {{ 
+          switch_system_interface 
+          | selectattr('l2_interface', 'defined') 
+          | map(attribute='name') 
+          | list 
+        }}
+
+  - name: Base neighbor_group with dynamic interfaces
+    ansible.builtin.set_fact:
+      _bgp_ng: >-
+        {{ 
+          bgp.neighbor_group 
+          | map('combine', {'interface': _bgp_ng_interface}) 
+          | list 
+        }}
+
+  - name: Append Spine BGP config as needed
+    ansible.builtin.set_fact:
+      _bgp_ng: >- 
+        {{
+          _bgp_ng 
+          |  map('combine', bgp.spine_config) 
+          | list  
+        }}
+    when: bgp_role is defined and bgp_role == 'spine'
+
+  - name: BGP configuration
+    fortinet.fortiswitch.fortiswitch_router_bgp:
+      router_bgp:
+        router_id: "{{ switch_system_interface | selectattr('type','equalto','loopback')| map(attribute='ip') | first | split('/') | first }}" 
+        maximum_paths_ibgp: "{{ bgp.maximum_paths_ibgp | default(omit) }}"
+        as: "{{ bgp.as | default(omit) }}"
+        redistribute: "{{ bgp.resdistribute | default(omit) }}"
+        neighbor_group: "{{ _bgp_ng }}"
+
+    #  ADD FOR LEAF:
+    #   config evpn
+    #   set advertise-vni enable
+    #   config vni
+    #     edit 100
+    #       set rd <route distinguisher> <- optional
+    #       set export-rt <route target to export> <- optional
+    #       set import-rt <route target to import> <- optional
+    #     next
+    #     edit 200
+    #     next
+    #   end
+  
+
 ### 5. Config Leaf switches. (Same interface + VLAN), similar BGP, add evpn
     # config system interface
     #   edit "SVI100"
@@ -93,6 +181,8 @@
     #     edit 200
     #     next
     #   end
+
+    
 ### 6. Config leaf VXLAN
     # config system vxlan
     #   edit "vni.100"
@@ -137,10 +227,3 @@
       system_global:
         admintimeout: 20
 
-  - name: Configure interfaces.
-    fortinet.fortiswitch.fortiswitch_system_interface:
-      state: "present"
-      system_interface:
-         name: mgmt
-        #  interface: mgmt
-         secondary_IP: disable
