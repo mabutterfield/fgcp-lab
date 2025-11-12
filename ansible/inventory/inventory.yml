@@ -14,12 +14,18 @@ all:
       hosts:
         fgt_rt1: { ansible_host: 10.255.113.111 }
         fgt_rt2: { ansible_host: 10.255.113.112 }
-    fsw:
+    fsw_spine:
       hosts:
-        fsw_spine: { ansible_host: 192.168.5.147 }
+        fsw_spine1: { ansible_host: 192.168.5.147 }
+    fsw_leaf:
+      hosts:
         # fsw_leaf1: { ansible_host: 192.168.5.148 }
         # fsw_leaf2: { ansible_host: 192.168.5.149 }
         # fsw_leaf3: { ansible_host: 192.168.5.150 }
+    allfsw:
+      children:
+        fsw_spine:
+        fsw_leaf1:
       vars:
         ansible_network_os: fortinet.fortiswitch.fortiswitch
         ansible_connection: httpapi

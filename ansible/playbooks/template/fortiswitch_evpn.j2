@@ -1,0 +1,13 @@
+{# Release Ports back to root #}
+{%- if vxlan | default([]) | length > 0 %}
+config router bgp
+config evpn
+set advertise-vni enable
+config vni
+{% for item in vxlan %}
+edit {{ item.vni }}
+next
+{% endfor %}
+end
+end
+{% endif -%}

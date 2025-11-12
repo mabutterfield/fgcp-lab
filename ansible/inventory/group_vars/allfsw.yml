@@ -25,3 +25,10 @@ bgp:
     ### Spine Configs:
     route_reflector_client: enable
     route_reflector_client_evpn: enable
+
+ssh_admin_name: ssh_admin
+ssh_admin_profile: super_admin
+ssh_pubkey: "'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID604VTVJnkyLJcPW/0N841KlFl3S1lPh937+Wn/aW7K mike@devtools'"
+ssh_pubkey_path: "~/.ssh/id_ed25519.pub"
+ssh_privkey_path: "~/.ssh/id_ed25519"
+ssh_options_list: "StrictHostKeyChecking=no  UserKnownHostsFile=/dev/null"

@@ -1,0 +1,49 @@
+vxlan:
+  - name: "vni.100"
+    interface: loop1
+    vlanid: 100
+    vni: 100
+    evpn: enable
+    arp-nd-suppression: enable
+  - name: "vni.100"
+    interface: loop1
+    vlanid: 100
+    vni: 100
+    evpn: enable
+    arp-nd-suppression: enable
+    
+bgp_leaf:
+  maximum_paths_ibgp: 2
+
+switch_system_interface:
+  - name: mgmt
+    type: physical
+    secondary_ip: disable
+  - name: RVI11
+    type: physical
+    description: "to spine"
+    l2_interface: "port1"
+  - name: SVI100
+    vlanid: 100
+    interface: "internal"
+  - name: SVI200
+    vlanid: 200
+    interface: "internal"
+
+switch_interface:
+  - name: port5
+    native_vlan: 100
+  - name: port6
+    native_vlan: 100
+  - name: port7
+    native_vlan: 100
+  - name: port8
+    native_vlan: 100
+  - name: port9
+    native_vlan: 200
+  - name: port10
+    native_vlan: 200
+  - name: port11
+    native_vlan: 200
+  - name: port12
+    native_vlan: 200

@@ -18,4 +18,16 @@ switch_system_interface:
     type: physical
     description: "to leaf3-port1"
     l2_interface: "port5"
-# bgp_role: spine
+vxlan:
+  - name: "vni.100"
+    interface: loop1
+    vlanid: 100
+    vni: 100
+    evpn: enable
+    arp-nd-suppression: enable
+  - name: "vni.100"
+    interface: loop1
+    vlanid: 100
+    vni: 100
+    evpn: enable
+    arp-nd-suppression: enable
