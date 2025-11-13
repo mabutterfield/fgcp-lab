@@ -6,10 +6,10 @@ all:
         localhost: { ansible_connection: localhost }
     fgsp:
       hosts:
-        fgsp_fgt1: { ansible_host: 10.255.113.101, fgsp_index: 1 }
-        fgsp_fgt2: { ansible_host: 10.255.113.102, fgsp_index: 2 }
-        fgsp_fgt3: { ansible_host: 10.255.113.103, fgsp_index: 3 }
-        fgsp_fgt4: { ansible_host: 10.255.113.104, fgsp_index: 4 }
+        fgsp_fgt1: { ansible_host: 192.168.5.141, fgsp_index: 1 }
+        fgsp_fgt2: { ansible_host: 192.168.5.142, fgsp_index: 2 }
+        fgsp_fgt3: { ansible_host: 192.168.5.143, fgsp_index: 3 }
+        fgsp_fgt4: { ansible_host: 192.168.5.144, fgsp_index: 4 }
     routers:
       hosts:
         fgt_rt1: { ansible_host: 10.255.113.111 }
@@ -19,13 +19,13 @@ all:
         fsw_spine1: { ansible_host: 192.168.5.147 }
     fsw_leaf:
       hosts:
-        # fsw_leaf1: { ansible_host: 192.168.5.148 }
-        # fsw_leaf2: { ansible_host: 192.168.5.149 }
-        # fsw_leaf3: { ansible_host: 192.168.5.150 }
+        fsw_leaf1: { ansible_host: 192.168.5.148 }
+        fsw_leaf2: { ansible_host: 192.168.5.149 }
+        fsw_leaf3: { ansible_host: 192.168.5.150 }
     allfsw:
       children:
         fsw_spine:
-        fsw_leaf1:
+        fsw_leaf:
       vars:
         ansible_network_os: fortinet.fortiswitch.fortiswitch
         ansible_connection: httpapi

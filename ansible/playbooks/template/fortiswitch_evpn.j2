@@ -10,4 +10,16 @@ next
 {% endfor %}
 end
 end
+end
+config system vxlan
+{% for item in vxlan %}
+edit {{ item.name }}
+set vni {{ item.vni }}
+set vlanid {{ item.vlanid }}
+set interface {{ item.interface }}
+set evpn {{ item.evpn }}
+set arp-nd-suppression {{ item.arp_nd_suppression }}
+next
+{% endfor %}
+end
 {% endif -%}

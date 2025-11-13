@@ -1,3 +1,4 @@
 .ansible/*
 *password*
 /ansible/collections
+/debug/*

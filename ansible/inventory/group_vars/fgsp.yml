@@ -15,7 +15,7 @@ networks:
 
 aggregate:
   - name: "agg"
-    members: ["port2", "port3"]
+    members: ["x3", "x4"]
     lacp: "active"
     vdom: root
 
@@ -40,13 +40,13 @@ interfaces:
     interface: agg
     vlanid: 200
     allowaccess: [ping]
-  - name: port4
+  - name: ha
     vdom: root
     ha_sync: true
     alias: sync1
     network: sync1
     allowaccess: [ping]
-  - name: port5
+  - name: port1
     vdom: root
     ha_sync: true
     alias: sync2

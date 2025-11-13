@@ -4,14 +4,14 @@ vxlan:
     vlanid: 100
     vni: 100
     evpn: enable
-    arp-nd-suppression: enable
-  - name: "vni.100"
+    arp_nd_suppression: enable
+  - name: "vni.200"
     interface: loop1
-    vlanid: 100
-    vni: 100
+    vlanid: 200
+    vni: 200
     evpn: enable
-    arp-nd-suppression: enable
-    
+    arp_nd_suppression: enable
+
 bgp_leaf:
   maximum_paths_ibgp: 2
 

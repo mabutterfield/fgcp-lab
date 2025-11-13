@@ -148,18 +148,38 @@
           router_id: "{{ router_id | default(omit) }}"
           maximum_paths_ibgp: "{{ bgp_leaf.maximum_paths_ibgp | default(omit) }}"
           as: "{{ bgp.as | default(omit) }}"
-          redistribute: "{{ bgp.resdistribute | default(omit) }}"
+          redistribute: "{{ bgp.redistribute | default(omit) }}"
           neighbor_group: "{{ _bgp_ng }}"
 
-    - name: Generate FSW evpn BGP Leaf Config
+    - name: Generate FSW evpn VXLAN/BGP Leaf Config
       ansible.builtin.set_fact:
         _switch_cli_command: "{{ lookup('template', template_path) }}"
       vars:
         template_path: "{{ playbook_dir }}/template/fortiswitch_evpn.j2"
 
+
+    - name: Generate FSW CLI file for reference
+      ansible.builtin.template:
+        src: "{{template_path}}"
+        dest: "{{debug_dir}}/{{inventory_hostname}}_cli.txt"
+        mode: "0644"
+      vars:
+        template_path: "{{ playbook_dir }}/template/fortiswitch_evpn.j2"
+        debug_dir: "{{ playbook_dir }}../../debug"
+
     - name: Check for empty lines
       ansible.builtin.set_fact:
-        _effective_lines: "{{ _switch_cli_command.splitlines() | map('trim') | select('match','^(config|edit|set|unset|next|end)\\b') | list }}"
+        _effective_lines: "{{ (_switch_cli_command | default('',true) | trim).splitlines() | map('trim') | select('match','^(config|edit|set|unset|next|end)\\b') | list }}"
+      when: 
+       - _switch_cli_command is defined 
+      #  - _switch_cli_command | length > 0
+
+    # - name: debug
+    #   debug:
+    #     var: _effective_lines | length
+    
+    # - meta: end_host
+
 
     - name: Push switch command via ssh if necessary
       ansible.builtin.command: >
@@ -174,24 +194,36 @@
       changed_when: false
       when: _effective_lines | length > 0
       # failed_when: _ssh_check.rc !=0 or _ssh_check.stderr | length > 0
-      failed_when: _ssh_check.rc !=0 or ( _ssh_check.stderr |default('')) is regex('(?i)(error|unknown|invalid|syntax|command fail|failed)' )
+      failed_when: _ssh_check.rc !=0 or ( _ssh_check.stderr |default('')) is regex('(?i)(error|unknown|invalid|syntax|command fail|failed)' ) or ( _ssh_check.stdout |default('')) is regex('(?i)(error|unknown|invalid|syntax|command fail|failed)' )
 
     - name: Check SSH command
       ansible.builtin.debug:
         var: _ssh_check
+      when: _ssh_check is defined
 
-    - name: Configure VXLAN devices.
-      fortinet.fortiswitch.fortiswitch_system_vxlan:
-        state: "{{ item.state | default('present') }}"
-        system_vxlan:
-          interface: "{{ item.interface | default(omit) }}"
-          name: "{{ item.name }}"
-          vlanid: "{{ item.vlanid | default(omit) }}"
-          vni: "{{ item.vni | default(omit) }}"
-          evpn: "{{ item.evpn | default(omit) }}"
-          arp-nd-suppression: "{{ item.arp_nd_suppression | default(omit) }}"
-      loop: "{{ vxlan }}"
-      when: "'fsw_leaf' in group_names"
+    - name: PAUSE to review
+      pause: 
+        seconds: 15
+
+    # - name: Configure VXLAN devices.
+    #   fortinet.fortiswitch.fortiswitch_system_vxlan:
+    #     state: "{{ item.state | default('present') }}"
+    #     system_vxlan:
+    #       interface: "{{ item.interface | default(omit) }}"
+    #       name: "{{ item.name }}"
+    #       vlanid: "{{ item.vlanid | default(omit) }}"
+    #       vni: "{{ item.vni | default(omit) }}"
+    #       evpn: "{{ item.evpn | default(omit) }}"
+    #       arp-nd-suppression: "{{ item.arp_nd_suppression | default(omit) }}"
+    #   loop: "{{ vxlan }}"
+    #   when: "'fsw_leaf' in group_names"
+    #   register: _vxlan_response
+    #   ignore_errors: true
+
+    # - debug:
+    #     var: _vxlan_response
+
+    # - meta: end_host  
 
     - name: Usable interfaces (trunks and ports).
       fortinet.fortiswitch.fortiswitch_switch_interface:
@@ -201,8 +233,8 @@
           native_vlan: "{{ item.native_vlan | default(omit) }}"
       loop: "{{ switch_interface }}"
       when:
-        - switch_interface defined
-        - switch_interface | length > 0
+        - switch_interface is defined
+        - switch_interface | default([]) |  length > 0
 
     - name: Switch-global stp settings.
       fortinet.fortiswitch.fortiswitch_switch_stp_settings:

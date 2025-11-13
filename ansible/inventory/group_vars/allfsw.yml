@@ -8,8 +8,8 @@ admin_password_file: ../fsw_admin_password.txt
 bgp:
   as: 65001
   redistribute:
-    - name: "connected"
-      status: "enable"
+    - name: connected
+      status: enable
   neighbor_group:
     - name: ISL
       advertisement_interval: 0
