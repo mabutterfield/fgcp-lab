@@ -6,12 +6,13 @@ vdoms:
     mgmt: true
   - name: traffic
 
-networks:
-  dc_lan: "10.10.10.0/24"
-  prem_lan: "10.10.20.0/24"
-  sync1: "10.10.30.0/24"
-  sync2: "10.10.40.0/24"
-  loopback: "10.10.255.0/24"
+
+# networks:
+#   dc_lan: "10.10.10.0/24"
+#   prem_lan: "10.10.20.0/24"
+#   sync1: "10.10.30.0/24"
+#   sync2: "10.10.40.0/24"
+#   loopback: "10.10.255.0/24"
 
 aggregate:
   - name: "agg"

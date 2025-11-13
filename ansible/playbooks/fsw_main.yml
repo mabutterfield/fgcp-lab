@@ -151,6 +151,28 @@
           redistribute: "{{ bgp.redistribute | default(omit) }}"
           neighbor_group: "{{ _bgp_ng }}"
 
+
+#### We need to dynamically not install VXLAN that exist
+    - name: Get VXLAN Info
+      fortinet.fortiswitch.fortiswitch_configuration_fact:
+        selectors:
+            - selector: system_vxlan
+      register: _vxlan_fact
+
+    - name: Determine VXLAN existing vs desired
+      ansible.builtin.set_fact:
+        vxlan_existing: "{{ ((_vxlan_fact.meta | first).results | default([])) | map(attribute='name') | list }}"
+        vxlan_desired: "{{ ((vxlan | default([])) | map(attribute='name') | list)  }}"
+
+    - name: Determine VXLAN names to add
+      ansible.builtin.set_fact:
+        vxlan_add_names: "{{ vxlan_desired | difference(vxlan_existing) | list  }}"
+
+
+    - name: build VXLAN var
+      ansible.builtin.set_fact:
+          vxlan_to_add: "{{ (vxlan | default([])) | selectattr('name','in', vxlan_add_names) | list }}"
+
     - name: Generate FSW evpn VXLAN/BGP Leaf Config
       ansible.builtin.set_fact:
         _switch_cli_command: "{{ lookup('template', template_path) }}"
@@ -165,7 +187,7 @@
         mode: "0644"
       vars:
         template_path: "{{ playbook_dir }}/template/fortiswitch_evpn.j2"
-        debug_dir: "{{ playbook_dir }}../../debug"
+        debug_dir: "{{ playbook_dir }}/../../debug"
 
     - name: Check for empty lines
       ansible.builtin.set_fact:
@@ -250,3 +272,4 @@
       fortinet.fortiswitch.fortiswitch_system_global:
         system_global:
           admintimeout: 20
+          hostname: "{{ inventory_hostname }}"

@@ -11,8 +11,10 @@ next
 end
 end
 end
+{% endif %}
+{%- if vxlan_to_add | default([]) | length > 0 %}
 config system vxlan
-{% for item in vxlan %}
+{% for item in vxlan_to_add %}
 edit {{ item.name }}
 set vni {{ item.vni }}
 set vlanid {{ item.vlanid }}

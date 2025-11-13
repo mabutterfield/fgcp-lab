@@ -47,3 +47,4 @@ switch_interface:
     native_vlan: 200
   - name: port12
     native_vlan: 200
+  

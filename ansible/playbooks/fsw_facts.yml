@@ -1,0 +1,37 @@
+---
+- name: FortiSwitch System Configuration
+  hosts: allfsw
+  connection: httpapi
+  gather_facts: false
+  tasks:
+    - name: Establish Paths
+      ansible.builtin.import_tasks: "includes/pre_tasks.yml"
+
+    - name: Get VXLAN Info
+      fortinet.fortiswitch.fortiswitch_configuration_fact:
+        selectors:
+            - selector: system_vxlan
+      register: _vxlan_fact
+
+    - name: Determine VXLAN existing vs desired
+      ansible.builtin.set_fact:
+        vxlan_existing: "{{ ((_vxlan_fact.meta | first).results | default([])) | map(attribute='name') | list }}"
+        vxlan_desired: "{{ ((vxlan | default([])) | map(attribute='name') | list)  }}"
+
+    - name: Determine VXLAN to add
+      ansible.builtin.set_fact:
+        vxlan_add_names: "{{ vxlan_desired | difference(vxlan_existing) | list  }}"
+
+
+    - name: build VXLAN var
+      ansible.builtin.set_fact:
+          vxlan_to_add: "{{ vxlan | selectattr('name','in', vxlan_add_names) | list }}"
+          
+    - name: Debug VXLAN to add
+      ansible.builtin.debug:  
+         msg: 
+           desired: "{{ vxlan_desired }}"
+           existing: "{{ vxlan_existing }}"
+           add_names: "{{ vxlan_add_names }}"
+           add_var: "{{ vxlan_to_add  }}"
+    - meta: end_host 
