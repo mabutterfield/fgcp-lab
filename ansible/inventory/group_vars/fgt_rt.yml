@@ -2,28 +2,25 @@ vdoms:
   - name: root
     mgmt: true
   - name: traffic
-
-
+### We use FGSP Index to calculate IP address, quick and easy way to do this for RT
 
 networks:
   dc_lan: "10.10.10.0/24"
   prem_lan: "10.10.20.0/24"
   sync1: "10.10.30.0/24"
   sync2: "10.10.40.0/24"
+  dc_fts: "10.100.0.0/24"
+  prem_fts: "10.200.0.0/24"
+  loopback: "10.10.255.0/32"
 
-
-
-aggregate:
-  - name: "agg"
-    members: ["port2", "port3"]
-    lacp: "active"
-    vdom: root
-
-zones:
-  - { name: "TRANSIT", interfaces: ["agg-wan"], vdom: "data" }
-  - { name: "LAN", interfaces: ["agg-lan"], vdom: "data" }
+# aggregate:
+#   - name: "agg"
+#     members: ["port2", "port3"]
+#     lacp: "active"
+#     vdom: root
 
 bgp:
   vdom: "data"
   local_as: 65020
+
   # Peers computed from FGSP transit /28 addresses (see tasks/bgp.yml)

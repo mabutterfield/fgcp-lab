@@ -1,0 +1,83 @@
+- name: Create FW Zones
+  fortios_system_zone:
+    vdom: "{{ item.vdom }}"
+    state: "{{ item.state | default('present') }}"
+    system_zone:
+      name: "{{ item.name }}"
+      description: "{{ item.description | default(omit)}}"
+      interface: "{{ (item.interfaces | default([])) | map('community.general.dict_kv', 'interface_name') }}"
+      intrazone: "{{ item.intrazone | default('allow') }}"
+  loop: "{{ zones }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Firewall Address Objects
+  fortinet.fortios.fortios_firewall_address:
+    # access_token: "{{ fortios_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    vdom: "{{ traffic_vdom }}"
+    firewall_address:
+      name: "{{ item.name }}"
+      type: "{{ item.type |default(omit) }}"
+      comment: "{{ item.comment |default(omit) }}"
+      subnet: "{{ item.subnet |default(omit) }}"
+      color: "{{ item.color |default(omit) }}"
+      country: "{{ item.country |default(omit) }}"
+      fqdn: "{{ item.fqdn |default(omit)  }}"
+  loop: "{{ firewall_address }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Firewall Address Group Objects
+  fortinet.fortios.fortios_firewall_addrgrp:
+    # access_token: "{{ fortios_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    vdom: "{{ traffic_vdom }}"
+    firewall_addrgrp:
+      name: "{{ item.name }}"
+      comment: "{{ item.comment | default(omit) }}"
+      color: "{{ item.color | default(omit) }}"
+      member: "{{ item.member }}"
+  loop: "{{ firewall_address_group }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Firewall Policy
+  fortinet.fortios.fortios_firewall_policy:
+    # access_token: "{{ fortios_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    vdom: "{{ traffic_vdom }}"
+    firewall_policy:
+      name: "{{ item.name }}"
+      policyid: "{{ item.policyid }}"
+      comments: "{{ item.comment | default(omit) }}"
+      status: "{{ item.status | default('enable') }}"
+      global_label: "{{ item.global_label | default(omit) }}"
+      ### FW Matching
+      srcintf: "{{ item.srcintf | default(omit) }}"
+      srcaddr: "{{ item.srcaddr | default(omit) }}"
+      srcaddr_negate: "{{ item.srcaddr_negate | default(omit) }}"
+      dstintf: "{{ item.dstintf }}"
+      dstaddr: "{{ item.dstaddr | default(omit) }}"
+      dstaddr_negate: "{{ item.dstaddr_negate | default(omit) }}"
+      service: "{{ item.service | default(omit) }}"
+      service_negate: "{{ item.service_negate | default(omit) }}"
+      ### Action
+      action: "{{ item.action | default('deny') }}"
+      logtraffic: "{{ item.logtraffic | default('all') }}"
+      logtraffic_start: "{{ item.logtraffic_start | default('enable') }}"
+      nat: "{{ item.nat | default('disable') }}"
+      schedule: "{{ item.schedule | default('always')}}"
+      inspection_mode: "{{ item.inspection_mode | default(omit) }}"
+      ### Security Profiles
+      utm_status: "{{ item.utm_status | default(omit) }}"
+      av_profile: "{{ item.av_profile | default(omit) }}"
+      dnsfilter_profile: "{{ item.dnsfilter_profile | default(omit) }}"
+      ssl_ssh_profile: "{{ item.ssl_ssh_profile | default(omit) }}"
+      ips_sensor: "{{item.ips_sensor | default(omit) }}"
+      application_list: "{{ item.application_list | default(omit) }}"
+      videofilter_profile: "{{ item.video_profile | default(omit) }}"
+      webfilter_profile: "{{ item.webfilter_profile | default(omit) }}"
+  loop: "{{ firewall_policy }}"
+  loop_control:
+    label: "{{ item.policyid}}:{{item.name}}"

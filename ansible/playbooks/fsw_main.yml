@@ -223,29 +223,29 @@
         var: _ssh_check
       when: _ssh_check is defined
 
-    - name: PAUSE to review
-      pause: 
-        seconds: 15
+    - name: Configure optional per-VLAN settings.
+      fortinet.fortiswitch.fortiswitch_switch_vlan:
+          state: "{{ item.state | default('present') }}"
+          switch_vlan:
+            id: "{{ item.id }}"
+            primary_vlan: "{{ item.id  }}"
+            description: "{{ item.name | default(omit) }}"
+      loop: "{{ vlan }}"
+      when: 
+        - vlan is defined
+        - vlan | length > 0
 
-    # - name: Configure VXLAN devices.
-    #   fortinet.fortiswitch.fortiswitch_system_vxlan:
-    #     state: "{{ item.state | default('present') }}"
-    #     system_vxlan:
-    #       interface: "{{ item.interface | default(omit) }}"
-    #       name: "{{ item.name }}"
-    #       vlanid: "{{ item.vlanid | default(omit) }}"
-    #       vni: "{{ item.vni | default(omit) }}"
-    #       evpn: "{{ item.evpn | default(omit) }}"
-    #       arp-nd-suppression: "{{ item.arp_nd_suppression | default(omit) }}"
-    #   loop: "{{ vxlan }}"
-    #   when: "'fsw_leaf' in group_names"
-    #   register: _vxlan_response
-    #   ignore_errors: true
-
-    # - debug:
-    #     var: _vxlan_response
-
-    # - meta: end_host  
+    - name: Link-aggregation.
+      fortinet.fortiswitch.fortiswitch_switch_trunk:
+          state: "{{ item.state | default('present') }}"
+          switch_trunk:
+             name: "{{ item.name }}"
+             mode: "{{ item.mode | default('lacp-active') }}"
+             members: "{{ item.members | default(omit) }}" 
+      loop: "{{ trunk }}"
+      when: 
+        - trunk is defined
+        - trunk | length > 0
 
     - name: Usable interfaces (trunks and ports).
       fortinet.fortiswitch.fortiswitch_switch_interface:
@@ -253,6 +253,7 @@
         switch_interface:
           name: "{{ item.name  }}"
           native_vlan: "{{ item.native_vlan | default(omit) }}"
+          allowed_vlans: "{{ item.allowed_vlans | default(omit) }}"
       loop: "{{ switch_interface }}"
       when:
         - switch_interface is defined

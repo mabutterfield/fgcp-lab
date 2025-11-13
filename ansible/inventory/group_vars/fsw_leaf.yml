@@ -47,4 +47,19 @@ switch_interface:
     native_vlan: 200
   - name: port12
     native_vlan: 200
-  
+  - name: fgt_fgsp
+    native_vlan: 1
+    allowed_vlans: "100 200"
+
+trunk:
+  - name: fgt_fgsp
+    members:
+      - member_name: port13
+      - member_name: port14
+    description: "to_fgsp_fgt"
+
+vlan:
+  - name: prem_lan
+    id: 200
+  - name: dc_lan
+    id: 100

@@ -1,6 +1,6 @@
 ---
 - name: FortiGate System Configuration
-  hosts: fgsp
+  hosts: allfgt
   connection: httpapi
   gather_facts: false
   pre_tasks:
@@ -20,6 +20,10 @@
       ansible.builtin.include_tasks: "includes/fgsp.yml"
       when: "'fgsp' in group_names"
 
+
     - name: Configure BGP
       ansible.builtin.include_tasks: "includes/bgp.yml"
-      when: "'fgsp' in group_names"
+      # when: "'fgsp' in group_names"
+
+    - name: Configure FW Policy
+      ansible.builtin.include_tasks: "includes/policy.yml"

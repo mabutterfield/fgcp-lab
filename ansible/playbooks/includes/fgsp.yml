@@ -22,7 +22,7 @@
 - name: Build cluster_peer
   ansible.builtin.set_fact:
     cluster_peer: "{{ (cluster_peer | default([])) + [ {
-      'peerip':  (networks['sync1'] | ansible.utils.ipmath( hostvars[item].fgsp_index)),
+      'peerip':  (networks['sync1'] | ansible.utils.ipmath( hostvars[item].fw_index)),
       'peervd':  'root',
       'sync_id': loop_index+1,
       'syncvd':   fgsp_syncvd_list
@@ -39,7 +39,7 @@
 - name: Append  cluster_peer
   ansible.builtin.set_fact:
     cluster_peer: "{{ (cluster_peer | default([])) + [ {
-      'peerip':  (networks['sync2'] | ansible.utils.ipmath( hostvars[item].fgsp_index)),
+      'peerip':  (networks['sync2'] | ansible.utils.ipmath( hostvars[item].fw_index)),
       'peervd':  'root',
       'sync_id': loop_index+fgsp_peer_count,
       'syncvd':   fgsp_syncvd_list
@@ -59,7 +59,7 @@
     system_standalone_cluster:
       cluster_peer: "{{cluster_peer}}"
       encryption: "enable"
-      group_member_id: "{{ fgsp_index -1 }}"
+      group_member_id: "{{ fw_index -1 }}"
       layer2_connection: "available"
       # monitor_interface:
       #     -  name: "default_name_32 (source system.interface.name)"

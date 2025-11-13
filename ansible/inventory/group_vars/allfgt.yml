@@ -5,6 +5,12 @@ mgmt_gateway: 10.255.113.254
 ansible_user: admin
 admin_password_file: ../admin_password.txt
 vdom: root
+traffic_vdom: traffic
+
+vdoms:
+  - name: root
+    mgmt: true
+  - name: traffic
 
 ### Environment
 networks:
@@ -14,6 +20,11 @@ networks:
   sync2: "10.10.40.0/24"
   loopback: "10.10.255.0/24"
 
+bgp_redistribute:
+  - name: connected
+    status: enable
+  - name: static
+    status: enable
 #### Default Settings
 global_settings:
   admintimeout: 90
@@ -48,3 +59,69 @@ system_ntp:
   type: fortiguard
 ### vdoms
 
+firewall_address:
+  - name: "rfc-10"
+    type: "ipmask"
+    subnet: "10.0.0.0/8"
+  - name: "rfc-172"
+    type: "ipmask"
+    subnet: "172.16.0.0/12"
+  - name: "rfc-192"
+    type: "ipmask"
+    subnet: "192.168.0.0/16"
+
+firewall_address_group:
+  - name: "rfc-net"
+    comment: "RFC Networks"
+    member:
+      - name: rfc-10
+      - name: rfc-172
+      - name: rfc-192
+
+firewall_policy:
+  - policyid: 20
+    state: "present"
+    name: "Prem-to-DC"
+    comments: "Ansible Managed FW Policy"
+    status: "enable"
+    ### FW Matching
+    srcintf:
+      - name: "to_prem"
+    srcaddr:
+      - name: "rfc-net"
+    dstintf:
+      - name: "to_dc"
+    dstaddr:
+      - name: "rfc-net"
+    action: "accept"
+    service:
+      - name: "ALL"
+    logtraffic: "all"
+    ### Security Profiles
+    utm_status: "enable"
+    ssl_ssh_profile: "certificate-inspection"
+    ips_sensor: "g-default"
+    application_list: "g-default"
+  - policyid: 30
+    state: "present"
+    name: "DC-to-Prem"
+    comments: "Ansible Managed FW Policy"
+    status: "enable"
+    ### FW Matching
+    srcintf:
+      - name: "to_dc"
+    srcaddr:
+      - name: "rfc-net"
+    dstintf:
+      - name: "to_prem"
+    dstaddr:
+      - name: "rfc-net"
+    action: "accept"
+    service:
+      - name: "ALL"
+    logtraffic: "all"
+    ### Security Profiles
+    utm_status: "enable"
+    ssl_ssh_profile: "certificate-inspection"
+    ips_sensor: "g-default"
+    application_list: "g-default"

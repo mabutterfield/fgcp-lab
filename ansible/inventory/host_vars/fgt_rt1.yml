@@ -1,0 +1,45 @@
+zones:
+  - { name: "to_prem", interfaces: ["x3"], vdom: "traffic" }
+  - { name: "to_dc", interfaces: ["x4"], vdom: "traffic" }
+
+router_net: dc_lan
+
+interfaces:
+  - name: x3
+    vdom: traffic
+    # default_gw: true
+    network: dc_lan
+    allowaccess: [ping]
+  - name: x4
+    vdom: traffic
+    default_gw: true
+    network: dc_fts
+    allowaccess: [ping]
+  - name: lo1
+    vdom: traffic
+    type: loopback
+    network: loopback
+    allowaccess: [ping]
+
+static_routes:
+  - id: 10
+    vdom: traffic
+    int: "x4"
+    gateway: 10.100.0.1
+    dst: 10.100.0.0/16
+  - id: 101
+    vdom: traffic
+    dst: 10.0.0.0/8
+    blackhole: enable
+  - id: 16
+    vdom: traffic
+    dst: 172.16.0.0/16
+    blackhole: enable
+  - id: 17
+    vdom: traffic
+    dst: 172.17.0.0/16
+    blackhole: enable
+  - id: 18
+    vdom: traffic
+    dst: 172.18.0.0/16
+    blackhole: enable

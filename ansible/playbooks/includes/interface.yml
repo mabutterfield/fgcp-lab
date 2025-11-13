@@ -13,6 +13,9 @@
       alias: "{{ item.alias | default(omit) }}"
   loop: "{{  aggregate }}"
   loop_control: { label: "{{ item.name }}" }
+  when:
+    - aggregate is defined
+    - aggregate | length > 0
 
 - name: Ensure interface's network key exists
   ansible.builtin.assert:
@@ -36,7 +39,12 @@
       vlanid: "{{ item.vlanid | default(omit) }}"
       alias: "{{ item.alias | default(omit) }}"
       role: "{{ item.role | default('undefined') }}"
-      ip: "{{ networks[item.network] | ansible.utils.ipmath( fgsp_index ) ~ '/24'}}"
+      ip: >-
+        {{
+          (networks[item.network] | ansible.utils.ipmath(254) ~ ' ' ~ (networks[item.network] | ansible.utils.ipaddr('netmask')) )
+          if ( item.default_gw | default(false) | bool )
+          else (networks[item.network] | ansible.utils.ipmath(fw_index) ~ ' ' ~ (networks[item.network] | ansible.utils.ipaddr('netmask')) )
+        }}
       # mode: "{{ item.mode | default(omit) }}"
       interface: "{{ item.interface | default(omit) }}"
       allowaccess: "{{ item.allowaccess | default(omit) }}"
@@ -46,12 +54,20 @@
     {
       label: "{{ item.name }}:{{item.vdom | default('root') }}:{{ item.network | default(omit)}}",
     }
-# - name: Calculate IP networks
-#   ansible.builtin.debug:
-#     msg:
-#       port_name: "{{ item.name}}"
-#       network_name: "{{ item.network }}"
-#       network_prefix: "{{ networks[item.network] | ansible.utils.ipmath( fgsp_index ) ~ '/24'}}"
-#   loop: "{{ interfaces }}"
-#   loop_control:
-#     label: "{{ item.name }}:{{ vdom }}:{{ item.network }}"
+
+- name: FortiTester Static Routing
+  fortinet.fortios.fortios_router_static:
+    vdom: "{{ item.vdom }}"
+    state: "{{ item.state | default('present') }}"
+    router_static:
+      seq_num: "{{ item.id }}"
+      device: "{{ item.int | default(omit) }}"
+      dst: "{{ item.dst }}"
+      gateway: "{{ item.gateway | default(omit) }}"
+      blackhole: "{{ item.blackhole | default('disable') }}"
+  loop: "{{ static_routes }}"
+  loop_control:
+    label: "{{ item.dst }}:via:{{ item.gateway | default(omit) }}"
+  when:
+    - static_routes is defined
+    - static_routes | length > 0
