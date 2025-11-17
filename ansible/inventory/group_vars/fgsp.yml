@@ -82,3 +82,51 @@ bgp:
   # remote_as:
   #   dc_lan: 65001
   #   prem_lan: 65002
+
+firewall_policy:
+  - policyid: 20
+    state: "present"
+    name: "Prem-to-DC"
+    comments: "Ansible Managed FW Policy"
+    status: "enable"
+    ### FW Matching
+    srcintf:
+      - name: "to_prem"
+    srcaddr:
+      - name: "rfc-net"
+    dstintf:
+      - name: "to_dc"
+    dstaddr:
+      - name: "rfc-net"
+    action: "accept"
+    service:
+      - name: "ALL"
+    logtraffic: "all"
+    ### Security Profiles
+    utm_status: "enable"
+    ssl_ssh_profile: "certificate-inspection"
+    ips_sensor: "g-default"
+    application_list: "g-default"
+  - policyid: 30
+    state: "present"
+    name: "DC-to-Prem"
+    comments: "Ansible Managed FW Policy"
+    status: "enable"
+    ### FW Matching
+    srcintf:
+      - name: "to_dc"
+    srcaddr:
+      - name: "rfc-net"
+    dstintf:
+      - name: "to_prem"
+    dstaddr:
+      - name: "rfc-net"
+    action: "accept"
+    service:
+      - name: "ALL"
+    logtraffic: "all"
+    ### Security Profiles
+    utm_status: "enable"
+    ssl_ssh_profile: "certificate-inspection"
+    ips_sensor: "g-default"
+    application_list: "g-default"

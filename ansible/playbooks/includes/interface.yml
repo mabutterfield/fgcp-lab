@@ -55,6 +55,17 @@
       label: "{{ item.name }}:{{item.vdom | default('root') }}:{{ item.network | default(omit)}}",
     }
 
+- name: Disable Unused  Interfaces
+  fortinet.fortios.fortios_system_interface:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    system_interface:
+      name: "{{ item }}"
+      status: "down"
+      # vdom: "{{ item.vdom }}"
+  loop: "{{ disabled_interfaces }}"
+
 - name: FortiTester Static Routing
   fortinet.fortios.fortios_router_static:
     vdom: "{{ item.vdom }}"

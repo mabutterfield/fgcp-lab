@@ -30,16 +30,22 @@ static_routes:
   - id: 101
     vdom: traffic
     dst: 10.0.0.0/8
-    blackhole: enable
+    int: "x4"
+    gateway: 10.200.0.1
   - id: 19
     vdom: traffic
     dst: 172.19.0.0/16
-    blackhole: enable
+    int: "x4"
+    gateway: 10.200.0.1
   - id: 20
     vdom: traffic
     dst: 172.20.0.0/16
-    blackhole: enable
+    int: "x4"
+    gateway: 10.200.0.1
+    # blackhole: enable
   - id: 21
     vdom: traffic
     dst: 172.21.0.0/16
-    blackhole: enable
+    # blackhole: enable
+    int: "x4"
+    gateway: 10.200.0.1

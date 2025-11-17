@@ -78,50 +78,78 @@ firewall_address_group:
       - name: rfc-172
       - name: rfc-192
 
-firewall_policy:
-  - policyid: 20
-    state: "present"
-    name: "Prem-to-DC"
-    comments: "Ansible Managed FW Policy"
-    status: "enable"
-    ### FW Matching
-    srcintf:
-      - name: "to_prem"
-    srcaddr:
-      - name: "rfc-net"
-    dstintf:
-      - name: "to_dc"
-    dstaddr:
-      - name: "rfc-net"
-    action: "accept"
-    service:
-      - name: "ALL"
-    logtraffic: "all"
-    ### Security Profiles
-    utm_status: "enable"
-    ssl_ssh_profile: "certificate-inspection"
-    ips_sensor: "g-default"
-    application_list: "g-default"
-  - policyid: 30
-    state: "present"
-    name: "DC-to-Prem"
-    comments: "Ansible Managed FW Policy"
-    status: "enable"
-    ### FW Matching
-    srcintf:
-      - name: "to_dc"
-    srcaddr:
-      - name: "rfc-net"
-    dstintf:
-      - name: "to_prem"
-    dstaddr:
-      - name: "rfc-net"
-    action: "accept"
-    service:
-      - name: "ALL"
-    logtraffic: "all"
-    ### Security Profiles
-    utm_status: "enable"
-    ssl_ssh_profile: "certificate-inspection"
-    ips_sensor: "g-default"
-    application_list: "g-default"
+disabled_interfaces:
+  - port2
+  - port3
+  - port4
+  - port5
+  - port6
+  - port7
+  - port8
+  - port9
+  - port10
+  - port11
+  - port12
+  - port13
+  - port14
+  - port15
+  - port16
+  - port17
+  - port18
+  - port19
+  - port20
+  - port21
+  - port22
+  - port23
+  - port24
+  - x5
+  - x6
+  - x7
+  - x8
+# firewall_policy:
+#   - policyid: 20
+#     state: "present"
+#     name: "Prem-to-DC"
+#     comments: "Ansible Managed FW Policy"
+#     status: "enable"
+#     ### FW Matching
+#     srcintf:
+#       - name: "to_prem"
+#     srcaddr:
+#       - name: "rfc-net"
+#     dstintf:
+#       - name: "to_dc"
+#     dstaddr:
+#       - name: "rfc-net"
+#     action: "accept"
+#     service:
+#       - name: "ALL"
+#     logtraffic: "all"
+#     ### Security Profiles
+#     utm_status: "enable"
+#     ssl_ssh_profile: "certificate-inspection"
+#     ips_sensor: "g-default"
+#     application_list: "g-default"
+#   - policyid: 30
+#     state: "present"
+#     name: "DC-to-Prem"
+#     comments: "Ansible Managed FW Policy"
+#     status: "enable"
+#     ### FW Matching
+#     srcintf:
+#       - name: "to_dc"
+#     srcaddr:
+#       - name: "rfc-net"
+#     dstintf:
+#       - name: "to_prem"
+#     dstaddr:
+#       - name: "rfc-net"
+#     action: "accept"
+#     service:
+#       - name: "ALL"
+#     logtraffic: "all"
+#     ### Security Profiles
+#     utm_status: "enable"
+#     ssl_ssh_profile: "certificate-inspection"
+#     ips_sensor: "g-default"
+#     application_list: "g-default"

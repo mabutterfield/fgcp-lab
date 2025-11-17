@@ -50,6 +50,9 @@ switch_interface:
   - name: fgt_fgsp
     native_vlan: 1
     allowed_vlans: "100 200"
+  - name: fgt_fgsp2
+    native_vlan: 1
+    allowed_vlans: "100 200"
 
 trunk:
   - name: fgt_fgsp
@@ -57,7 +60,11 @@ trunk:
       - member_name: port13
       - member_name: port14
     description: "to_fgsp_fgt"
-
+  - name: fgt_fgsp2
+    members:
+      - member_name: port15
+      - member_name: port16
+    description: "to_fgsp_fgt"
 vlan:
   - name: prem_lan
     id: 200
