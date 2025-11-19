@@ -27,6 +27,16 @@
   loop_control:
     label: "{{ item.name }}"
 
+- name: Configure Management Interfaces
+  fortinet.fortios.fortios_system_interface:
+    vdom: "{{ vdom | default('root') }}"
+    # access_token: "{{ fortios_superadmin_access_token }}"
+    state: "{{ item.state | default('present') }}"
+    system_interface:
+      name: "mgmt"
+      vdom: "root"
+      allowaccess: ["ping", "http", "https", "ssh", "snmp"]
+
 - name: Configure Remaining Interfaces
   fortinet.fortios.fortios_system_interface:
     vdom: "{{ vdom | default('root') }}"

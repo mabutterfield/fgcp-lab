@@ -99,3 +99,9 @@
       trap_high_cpu_threshold: "{{ system_snmp_sysinfo.trap_high_cpu_threshold | default(80) }}"
       trap_log_full_threshold: "{{ system_snmp_sysinfo.trap_log_full_threshold | default(90) }}"
       trap_low_memory_threshold: "{{ system_snmp_sysinfo.trap_low_memory_threshold | default(80) }}"
+
+- name: Configure IPS global parameter
+  fortinet.fortios.fortios_ips_global:
+    vdom: "{{ vdom }}"
+    ips_global:
+      database: regular

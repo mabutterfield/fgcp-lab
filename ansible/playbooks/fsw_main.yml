@@ -7,6 +7,35 @@
     - name: Establish Paths
       ansible.builtin.import_tasks: "includes/pre_tasks.yml"
 
+
+    - name: SNMP community configuration
+      fortinet.fortiswitch.fortiswitch_system_snmp_community:
+          state: "present"
+          system_snmp_community:
+            # events: "cpu-high"
+            hosts:
+                - id: "5"
+                  interface: "mgmt"
+                  ip: "192.168.0.0/16"
+            id: "1"
+            name: "fortinet"
+            # query_v1_port: "16"
+            query_v1_status: "disable"
+            query_v2c_port: "161"
+            query_v2c_status: "enable"
+            status: "enable"
+
+
+    - name: SNMP system info configuration.
+      fortinet.fortiswitch.fortiswitch_system_snmp_sysinfo:
+          system_snmp_sysinfo:
+              contact_info: "Rodney"
+              description: "switch"
+              # engine_id: "<your_own_value>"
+              location: "some_garage"
+              status: "enable"
+
+
     - name: Administrative user configuration.
       fortinet.fortiswitch.fortiswitch_system_admin:
         state: "present"
@@ -268,6 +297,8 @@
       fortinet.fortiswitch.fortiswitch_switch_global:
         switch_global:
           vxlan_stp_virtual_root: "enable"
+
+
 
     - name: Configure Global settings
       fortinet.fortiswitch.fortiswitch_system_global:

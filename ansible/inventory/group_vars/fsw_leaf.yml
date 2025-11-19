@@ -19,6 +19,7 @@ switch_system_interface:
   - name: mgmt
     type: physical
     secondary_ip: disable
+    allowaccess: ["ping", "http", "https", "ssh", "snmp"]
   - name: RVI11
     type: physical
     description: "to spine"
@@ -53,7 +54,12 @@ switch_interface:
   - name: fgt_fgsp2
     native_vlan: 1
     allowed_vlans: "100 200"
-
+  - name: fgt_fgsp3
+    native_vlan: 1
+    allowed_vlans: "100 200"
+  - name: fgt_fgsp4
+    native_vlan: 1
+    allowed_vlans: "100 200"
 trunk:
   - name: fgt_fgsp
     members:
@@ -64,6 +70,16 @@ trunk:
     members:
       - member_name: port15
       - member_name: port16
+    description: "to_fgsp_fgt"
+  - name: fgt_fgsp3
+    members:
+      - member_name: port17
+      - member_name: port18
+    description: "to_fgsp_fgt"
+  - name: fgt_fgsp4
+    members:
+      - member_name: port19
+      - member_name: port20
     description: "to_fgsp_fgt"
 vlan:
   - name: prem_lan

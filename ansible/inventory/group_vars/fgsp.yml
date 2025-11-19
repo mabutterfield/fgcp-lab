@@ -27,6 +27,7 @@ interfaces:
     vlanid: 100
     network: dc_lan
     allowaccess: [ping]
+
   - name: lo1
     vdom: traffic
     type: loopback

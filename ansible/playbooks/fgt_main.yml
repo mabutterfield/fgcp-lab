@@ -5,7 +5,9 @@
   gather_facts: false
   pre_tasks:
     - name: Establish Paths
-      ansible.builtin.include_tasks: "includes/pre_tasks.yml"
+      ansible.builtin.include_tasks:
+        file: "includes/pre_tasks.yml"
+      tags: [always]
   tasks:
     - name: System Configuration
       ansible.builtin.include_tasks: "includes/fgt_system.yml"
@@ -23,6 +25,7 @@
 
     - name: Configure BGP
       ansible.builtin.include_tasks: "includes/bgp.yml"
+      tags: [bgp]
       # when: "'fgsp' in group_names"
 
     - name: Configure FW Policy
